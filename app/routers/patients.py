@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Request, Response, status, Depends, UploadFile, File
+from fastapi import APIRouter, Request, Response, Depends, UploadFile, File
 from pydantic.types import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,10 +8,15 @@ from schemas.patients import CreatePatient, CreatePatientResponse, GetPatientRes
 from dependencies.basic_auth import basic_auth
 from dependencies.get_db import get_session
 
+from service.patients import (
+    create_new_patient_service, get_patient_by_id_service, add_item_to_patient_history_service,
+    delete_patient_by_id_service
+)
+
 router = APIRouter()
 
 
-@router.post("/patient/add", status_code=status.HTTP_200_OK, response_model=CreatePatientResponse)
+@router.post("/patient/add", response_model=CreatePatientResponse)
 async def create_new_patient(
         request: Request,
         response: Response,
@@ -19,11 +24,16 @@ async def create_new_patient(
         doctor: str = Depends(basic_auth),
         db_session: AsyncSession = Depends(get_session)
 ):
+    new_patient = await create_new_patient_service(
+        patient=patient,
+        doctor=doctor,
+        db_session=db_session
+    )
 
-    return patient
+    return new_patient
 
 
-@router.get("/patient", status_code=status.HTTP_200_OK, response_model=List[GetPatientResponse])
+@router.get("/patient", response_model=List[GetPatientResponse])
 async def filter_patients(
         request: Request,
         response: Response,
@@ -40,7 +50,7 @@ async def filter_patients(
     return
 
 
-@router.get("/patient-by-id", status_code=status.HTTP_200_OK, response_model=GetPatientResponse)
+@router.get("/patient-by-id", response_model=GetPatientResponse)
 async def get_patient_by_id(
         request: Request,
         response: Response,
@@ -48,11 +58,15 @@ async def get_patient_by_id(
         doctor: str = Depends(basic_auth),
         db_session: AsyncSession = Depends(get_session)
 ):
-    return
+    res = await get_patient_by_id_service(
+        patient_id=patient_id,
+        db_session=db_session
+    )
+    return res
 
 
-@router.put("/patient-history-update")
-async def update_patient_history_by_id(
+@router.put("/patient-history-add-item")
+async def add_item_to_patient_history(
         request: Request,
         response: Response,
         patient_id: UUID,
@@ -60,7 +74,13 @@ async def update_patient_history_by_id(
         doctor: str = Depends(basic_auth),
         db_session: AsyncSession = Depends(get_session)
 ):
-    return
+    item = await add_item_to_patient_history_service(
+        patient_id=patient_id,
+        data=data,
+        doctor=doctor,
+        db_session=db_session
+    )
+    return item
 
 
 @router.delete("/patient/{patient_id}")
@@ -71,6 +91,10 @@ async def delete_patient_by_id(
         doctor: str = Depends(basic_auth),
         db_session: AsyncSession = Depends(get_session)
 ):
+    await delete_patient_by_id_service(
+        patient_id=patient_id,
+        db_session=db_session
+    )
     return
 
 

@@ -5,7 +5,7 @@ from config import config
 
 DB_STRING = config.DB_STRING
 
-engine = create_async_engine(DB_STRING, future=True)
+engine = create_async_engine(DB_STRING, echo=True, future=True)
 
 async_session = sessionmaker(
     engine,

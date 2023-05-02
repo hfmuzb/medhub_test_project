@@ -16,6 +16,9 @@ class PatientCondition(BaseModel):
     condition_title: Optional[str] = None
     condition_details: Optional[str] = None
 
+    class Config:
+        orm_mode = True
+
 
 class CreatePatient(BasePatient):
     birthdate: date
