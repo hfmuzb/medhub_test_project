@@ -24,5 +24,9 @@ class Config:
 
     MINIO_BUCKET = os.getenv('MINIO_BUCKET', 'patients-data')
 
+    # introduce dummy doctor login and password
+    DOCTOR_LOGIN = 'DOCTOR_LOGIN'
+    DOCTOR_PASSWORD = 'DOCTOR_PASSWRD'
+
 
 config = Config()

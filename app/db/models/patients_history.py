@@ -11,5 +11,6 @@ class PatientsHistory(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     patient_id = Column(UUID(as_uuid=True), ForeignKey('patients.id'))
-    condition = Column(String)
+    condition_title = Column(String)
+    condition_details = Column(String)
     created_at = Column(DateTime(), nullable=False, server_default=func.now())
