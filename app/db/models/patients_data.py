@@ -11,7 +11,7 @@ class PatientsData(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     patient_id = Column(UUID(as_uuid=True), ForeignKey('patients.id'))
-    uploaded_by_doctor = Column(UUID(as_uuid=True), ForeignKey('doctors.id'))
+    uploaded_by_doctor = Column(UUID(as_uuid=True), ForeignKey('doctors_data.id'))
     data_type = Column(String)
     tags = Column(ARRAY(String))
     data_url = Column(String)

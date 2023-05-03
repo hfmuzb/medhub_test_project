@@ -1,0 +1,44 @@
+version: '3.8'
+
+x-common-minio-variables: &common-minio-variables
+  MINIO_HOST: minio
+  MINIO_PORT: 9000
+  MINIO_ACCESS_KEY: minioUser
+  MINIO_SECRET_KEY: 72sjjhfmmmkasdkjdwidjsafkjfh39938fhasdfSSS@#
+
+x-common-postgres-variables: &common-postgres-variables
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+  POSTGRES_CONTAINER_NAME: medhub_db_container
+  POSTGRES_PORT: 5432
+  DB_NAME: postgres
+
+services:
+  app:
+    build: .
+    image: medhub_test_app:v0.0.1
+    container_name: medhub_app_container
+    ports:
+      - "8000:8000"
+    environment:
+      <<: [*common-minio-variables, *common-postgres-variables]
+      MINIO_BUCKET: patients-data
+    depends_on:
+        - minio
+        - db
+
+  minio:
+    image: minio/minio:RELEASE.2022-06-20T23-13-45Z
+    container_name: minio_container
+    command: server --console-address :9001 /data
+    environment: *common-minio-variables
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+  db:
+    image: postgres:15.2
+    container_name: medhub_db_container
+    environment: *common-postgres-variables
+    ports:
+      - "8001:5432"
