@@ -4,19 +4,21 @@ from fastapi import APIRouter, Request, Response, Depends, UploadFile, File
 from pydantic.types import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from schemas.patients import CreatePatient, CreatePatientResponse, GetPatientResponse, PatientCondition
+from schemas.patients import (
+    CreatePatient, GetPatientResponse, PatientCondition, GetPatientsBasicData
+)
 from dependencies.basic_auth import basic_auth
 from dependencies.get_db import get_session
 
 from service.patients import (
     create_new_patient_service, get_patient_by_id_service, add_item_to_patient_history_service,
-    delete_patient_by_id_service
+    delete_patient_by_id_service, get_all_patients_service
 )
 
 router = APIRouter()
 
 
-@router.post("/patient/add", response_model=CreatePatientResponse)
+@router.post("/patient/add", response_model=GetPatientsBasicData)
 async def create_new_patient(
         request: Request,
         response: Response,
@@ -31,6 +33,21 @@ async def create_new_patient(
     )
 
     return new_patient
+
+
+@router.get("/patients/all", response_model=List[GetPatientsBasicData])
+async def get_all_patients(
+        request: Request,
+        response: Response,
+        limit: Optional[int] = None,
+        doctor: str = Depends(basic_auth),
+        db_session: AsyncSession = Depends(get_session)
+):
+    res = await get_all_patients_service(
+        limit=limit,
+        db_session=db_session
+    )
+    return res
 
 
 @router.get("/patient", response_model=List[GetPatientResponse])

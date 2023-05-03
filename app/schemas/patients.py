@@ -24,11 +24,12 @@ class CreatePatient(BasePatient):
     birthdate: date
 
 
-class CreatePatientResponse(BasePatient):
-    pass
-
-
 class GetPatientResponse(BasePatient):
     id: UUID
     birthdate: date
     patient_condition: List[PatientCondition]
+
+
+class GetPatientsBasicData(BasePatient):
+    id: UUID
+    birthdate: date

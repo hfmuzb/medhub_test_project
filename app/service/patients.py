@@ -24,7 +24,21 @@ async def create_new_patient_service(
     return new_patient
 
 
+async def get_all_patients_service(
+        limit,
+        db_session: AsyncSession
+):
+    patients = await db_session.execute(
+        select(Patient).limit(limit)
+    )
+    patients = patients.scalars().all()
+    if not patients:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    return [patient for patient in patients]
+
+
 async def filter_patients_service():
+    # TODO
     return
 
 
@@ -33,8 +47,9 @@ async def get_patient_by_id_service(
         db_session: AsyncSession
 ):
     patient = await db_session.execute(
-        select(Patient).filter(Patient.id == patient_id).first()
+        select(Patient).filter(Patient.id == patient_id)
     )
+    patient = patient.first()[0]
     if not patient:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -52,8 +67,11 @@ async def get_patient_by_id_service(
                           ]
 
     result = GetPatientResponse(
-        patient_condition=patient_conditions,
-        **patient.dict()
+        id=patient.id,
+        first_name=patient.first_name,
+        last_name=patient.last_name,
+        birthdate=patient.birthdate,
+        patient_condition=patient_conditions
     )
     return result
 
@@ -80,14 +98,22 @@ async def delete_patient_by_id_service(
         db_session: AsyncSession
 ):
     patient = await db_session.execute(select(Patient).filter(Patient.id == patient_id))
+    patient = patient.scalar()
     if not patient:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    patient_history = await db_session.execute(select(PatientsHistory).filter(PatientsHistory.patient_id == patient_id))
-    await db_session.delete(patient_history)
+
+    patients_history = await db_session.execute(
+        select(PatientsHistory).filter(PatientsHistory.patient_id == patient_id)
+    )
+    patients_history = patients_history.all()
+    for item in patients_history:
+        await db_session.delete(item[0])
+    await db_session.commit()
     await db_session.delete(patient)
-    await db_session.flush()
+    await db_session.commit()
     return
 
 
 async def upload_patient_data_service():
+    # TODO
     return
