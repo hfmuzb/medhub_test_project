@@ -12,7 +12,7 @@ from dependencies.get_db import get_session
 
 from service.patients import (
     create_new_patient_service, get_patient_by_id_service, add_item_to_patient_history_service,
-    delete_patient_by_id_service, get_all_patients_service
+    delete_patient_by_id_service, get_all_patients_service, upload_patient_data_service
 )
 
 router = APIRouter()
@@ -124,4 +124,12 @@ async def upload_patient_data(
         doctor: str = Depends(basic_auth),
         db_session: AsyncSession = Depends(get_session)
 ):
-    return
+    res = await upload_patient_data_service(
+        patient_id=patient_id,
+        doctor=doctor,
+        data_type='',
+        tags=[],
+        file=file,
+        db_session=db_session
+    )
+    return res

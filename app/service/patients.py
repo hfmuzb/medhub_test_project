@@ -1,4 +1,5 @@
-from fastapi import HTTPException, status
+import aiofiles
+from fastapi import HTTPException, status, UploadFile
 from pydantic.types import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,6 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from schemas.patients import CreatePatient, GetPatientResponse, PatientCondition
 from db.models.patients import Patient
 from db.models.patients_history import PatientsHistory
+from db.models.patients_data import PatientsData
+from db.models.doctors import Doctors
+from service.storage import s3
 
 
 async def create_new_patient_service(
@@ -114,6 +118,33 @@ async def delete_patient_by_id_service(
     return
 
 
-async def upload_patient_data_service():
-    # TODO
-    return
+async def upload_patient_data_service(
+        patient_id: UUID,
+        doctor: str,
+        data_type: str,
+        tags: list,
+        file: UploadFile,
+        db_session: AsyncSession,
+) -> str:
+    doctor = await db_session.execute(
+        select(Doctors).filter(Doctors.login == doctor)
+    )
+    doctor_id = doctor.first()[0].id
+    file_bytes = await file.read()
+    async with aiofiles.tempfile.NamedTemporaryFile('wb') as f:
+        await f.write(file_bytes)
+        s3_link = await s3.upload(
+            input_filepath=f.name,
+            filename=file.filename,
+            patient_id=patient_id
+        )
+    patient_data_item = PatientsData(
+        patient_id=patient_id,
+        uploaded_by_doctor=doctor_id,
+        data_type=data_type,
+        tags=tags,
+        data_url=s3_link
+    )
+    db_session.add(patient_data_item)
+    await db_session.commit()
+    return s3_link
