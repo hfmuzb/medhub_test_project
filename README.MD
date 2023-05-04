@@ -11,6 +11,10 @@ To start the app with all the dependencies (database and minio) included, run th
 
 To run tests: 
 
-`make test`
+`python3 -m venv .venv`
 
-`make unittest`
+`cd <project-root>`
+
+`pip install test_requirements.txt`
+
+`make test`

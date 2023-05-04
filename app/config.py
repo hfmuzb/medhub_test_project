@@ -5,8 +5,8 @@ class Config:
     DB_STRING = 'postgresql+asyncpg://{username}:{password}@{container}:{port}/{db_name}'
     USERNAME = os.getenv('POSTGRES_USER', 'postgres')
     PASSWORD = os.getenv('POSTGRES_PASSWORD', 'postgres')
-    CONTAINER = os.getenv('POSTGRES_CONTAINER_NAME', 'pg_container')
-    PORT = os.getenv('POSTGRES_PORT', '5432')
+    CONTAINER = os.getenv('POSTGRES_CONTAINER_NAME', 'localhost')
+    PORT = os.getenv('POSTGRES_PORT', '8001')
     DB_NAME = os.getenv('DB_NAME', 'postgres')
 
     DB_STRING = DB_STRING.format(username=USERNAME,
