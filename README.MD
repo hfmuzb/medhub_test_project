@@ -13,8 +13,10 @@ To run tests:
 
 `python3 -m venv .venv`
 
+`source .venv/bin/activate`
+
 `cd <project-root>`
 
-`pip install test_requirements.txt`
+`pip install -r test_requirements.txt`
 
 `make test`

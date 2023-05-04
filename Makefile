@@ -15,6 +15,6 @@ restart:
 
 
 test:
-	docker compose ud -d minio db
+	docker compose up -d minio db
 	pytest tests
 	docker compose down
