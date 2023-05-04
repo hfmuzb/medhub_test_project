@@ -16,6 +16,7 @@ Create and activate virtual environment:
 - `python3 -m venv .venv`
 
 - `source .venv/bin/activate`
+- `cd <project-root>`
 
 Install requirements: 
 - `pip install -r test_requirements.txt`
@@ -24,13 +25,13 @@ Run postgres and minio containers, which are used by the app:
 - `docker compose up -d minio db`
 
 Apply migrations:
-- `cd <project-root>/app`
+- `cd app`
 
 - `alembic upgrade heads`
 
 Go to project root dir, and run tests
 - `cd ..`
-- `pytest test`
+- `pytest tests`
 
 Stop postgres and minio containers:
 - `docker compose down`
