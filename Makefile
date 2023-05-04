@@ -12,9 +12,3 @@ restart:
 	docker compose down
 	docker compose build app
 	docker compose up -d app minio db
-
-
-test:
-	docker compose up -d minio db
-	pytest tests
-	docker compose down
