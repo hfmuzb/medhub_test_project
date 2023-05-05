@@ -12,7 +12,7 @@ from dependencies.get_db import get_session
 
 from service.patients import (
     create_new_patient_service, get_patient_by_id_service, add_item_to_patient_history_service,
-    delete_patient_by_id_service, get_all_patients_service, upload_patient_data_service
+    delete_patient_by_id_service, get_all_patients_service, upload_patient_data_service, filter_patients_service
 )
 
 router = APIRouter()
@@ -50,12 +50,11 @@ async def get_all_patients(
     return res
 
 
-@router.get("/patient", response_model=List[GetPatientResponse])
+@router.get("/filter-patients", response_model=List[UUID])
 async def filter_patients(
         request: Request,
         response: Response,
-        first_name: Optional[str] = None,
-        last_name: Optional[str] = None,
+        name: Optional[str] = None,
         condition_title: Optional[str] = None,
         doctor: str = Depends(basic_auth),
         db_session: AsyncSession = Depends(get_session)
@@ -63,8 +62,12 @@ async def filter_patients(
     """
     Get patients data based on given filters.
     """
-
-    return
+    res = await filter_patients_service(
+        name=name,
+        condition_title=condition_title,
+        db_session=db_session
+    )
+    return res
 
 
 @router.get("/patient-by-id", response_model=GetPatientResponse)

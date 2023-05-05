@@ -1,3 +1,5 @@
+from typing import Optional
+
 import aiofiles
 from fastapi import HTTPException, status, UploadFile
 from pydantic.types import UUID
@@ -41,9 +43,29 @@ async def get_all_patients_service(
     return [patient for patient in patients]
 
 
-async def filter_patients_service():
-    # TODO
-    return
+async def filter_patients_service(
+        db_session: AsyncSession,
+        name: Optional[str] = None,
+        condition_title: Optional[str] = None
+):
+    # if neither name and condition is not provided, raise HTTPException
+    if not (name or condition_title):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Please provide either name or condition title")
+    patients_ids = []
+    patients = await db_session.execute(
+        select(Patient).filter(
+            Patient.first_name.like(name) | Patient.last_name.like(name)
+        )
+    )
+    patients = patients.scalars()
+    if not patients:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    for patient in patients.all():
+        patients_ids.append(patient.id)
+
+    return patients_ids
 
 
 async def get_patient_by_id_service(
