@@ -53,9 +53,10 @@ async def get_patient_by_id_service(
     patient = await db_session.execute(
         select(Patient).filter(Patient.id == patient_id)
     )
-    if not patient.first():
+    patient = patient.first()
+    if not patient:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    patient = patient.first()[0]
+    patient = patient[0]
 
     patients_history = await db_session.execute(
         select(PatientsHistory).filter(PatientsHistory.patient_id == patient_id)
@@ -69,13 +70,32 @@ async def get_patient_by_id_service(
                                           created_at=record.created_at)
                           for record in patients_history
                           ]
+    patient_files = await db_session.execute(
+        select(PatientsData).filter(PatientsData.patient_id == patient_id)
+    )
+
+    patient_files = patient_files.scalars().all()
+
+    patient_files = [
+        PatientsData(
+            id=file.id,
+            patient_id=file.patient_id,
+            uploaded_by_doctor=file.uploaded_by_doctor,
+            data_type=file.data_type,
+            tags=file.tags,
+            data_url=file.data_url,
+            uploaded_at=file.uploaded_at
+        )
+        for file in patient_files
+    ]
 
     result = GetPatientResponse(
         id=patient.id,
         first_name=patient.first_name,
         last_name=patient.last_name,
         birthdate=patient.birthdate,
-        patient_condition=patient_conditions
+        patient_condition=patient_conditions,
+        patient_files=patient_files
     )
     return result
 
