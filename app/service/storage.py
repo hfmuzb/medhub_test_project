@@ -48,5 +48,18 @@ class AioBoto3:
             )
         return f"s3://{self.s3_bucket}/{s3_path}"
 
+    async def object_exists(
+            self,
+            bucket: str,
+            s3_key: str
+    ) -> bool:
+        async with self.session.client('s3', endpoint_url=self.endpoint_url) as s3_client:
+            try:
+                await s3_client.head_object(Bucket=bucket, Key=s3_key)
+                return True
+            except:
+                # TODO dive deeper into boto3 exceptions here
+                return False
+
 
 s3 = AioBoto3()

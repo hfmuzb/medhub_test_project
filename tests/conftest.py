@@ -1,9 +1,14 @@
 import asyncio
+import datetime
+import uuid
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
+import random
+import string
 
 from main import app
+from service.storage import s3
 
 
 @pytest.yield_fixture(scope='session')
@@ -23,3 +28,25 @@ def my_app(event_loop):
 async def ac(my_app):
     async with AsyncClient(app=my_app, base_url="http://test") as c:
         yield c
+
+
+@pytest.fixture
+def get_json_data():
+    data = {
+        'first_name': uuid.uuid4().hex,
+        'last_name': uuid.uuid4().hex,
+        'birthdate': datetime.date.today().strftime("%Y-%m-%d")
+    }
+    yield data
+
+
+@pytest.fixture
+def get_random_string(length: int = 300):
+    # random string for writing to a temp file
+    random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+    yield random_string
+
+
+@pytest.fixture
+def s3_client():
+    yield s3

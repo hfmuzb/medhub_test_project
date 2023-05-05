@@ -1,5 +1,3 @@
-import datetime
-import uuid
 import pytest
 from httpx import AsyncClient
 
@@ -7,21 +5,15 @@ from config import config
 
 
 @pytest.mark.asyncio
-async def test_create_patient(ac: AsyncClient) -> None:
-    data = {
-        'first_name': uuid.uuid4().hex,
-        'last_name': uuid.uuid4().hex,
-        'birthdate': datetime.date.today().strftime("%Y-%m-%d")
-    }
-
+async def test_create_patient(ac: AsyncClient, get_json_data) -> None:
     response = await ac.post(
         "/patient/add",
         auth=(config.DOCTOR_LOGIN, config.DOCTOR_PASSWORD),
-        json=data
+        json=get_json_data
     )
     assert response.status_code == 200
-    for key in data:
-        assert data[key] == response.json()[key]
+    for key in get_json_data:
+        assert get_json_data[key] == response.json()[key]
 
 
 @pytest.mark.asyncio
@@ -37,18 +29,12 @@ async def test_get_all_patients(ac: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_get_patient_by_id(ac: AsyncClient) -> None:
-    # prepare some data
-    data = {
-        'first_name': uuid.uuid4().hex,
-        'last_name': uuid.uuid4().hex,
-        'birthdate': datetime.date.today().strftime("%Y-%m-%d")
-    }
+async def test_get_patient_by_id(ac: AsyncClient, get_json_data) -> None:
     # create patient
     response = await ac.post(
         "/patient/add",
         auth=(config.DOCTOR_LOGIN, config.DOCTOR_PASSWORD),
-        json=data
+        json=get_json_data
     )
     created_patient_id = response.json().get('id')
     assert created_patient_id
@@ -61,3 +47,42 @@ async def test_get_patient_by_id(ac: AsyncClient) -> None:
     assert response.status_code == 200
     assert response.json()
     assert response.json().get('id') == created_patient_id
+
+
+@pytest.mark.asyncio
+async def test_file_upload(
+        ac: AsyncClient,
+        tmp_path,
+        get_json_data,
+        get_random_string,
+        s3_client
+) -> None:
+    d = tmp_path / 'sub'
+    d.mkdir()
+    file = d / 'temp.txt'
+    file.write_text(get_random_string)
+
+    # create a new patient
+    response = await ac.post(
+        '/patient/add',
+        auth=(config.DOCTOR_LOGIN, config.DOCTOR_PASSWORD),
+        json=get_json_data
+    )
+
+    patient_id = response.json().get('id')
+    assert patient_id
+
+    with open(file, 'rb') as f:
+        # now upload file through API, to a newly created patient
+        response = await ac.post(
+            f'/patient/data/{patient_id}',
+            auth=(config.DOCTOR_LOGIN, config.DOCTOR_PASSWORD),
+            files=[('file', f)]
+        )
+    assert response.status_code == 200
+
+    s3_link: str = response.json()
+    s3_file_path = s3_link.split(sep='//')[1]
+    s3_bucket, s3_key = s3_file_path.split(sep='/', maxsplit=1)
+
+    assert await s3_client.object_exists(bucket=s3_bucket, s3_key=s3_key)
