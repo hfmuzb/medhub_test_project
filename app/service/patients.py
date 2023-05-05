@@ -53,9 +53,9 @@ async def get_patient_by_id_service(
     patient = await db_session.execute(
         select(Patient).filter(Patient.id == patient_id)
     )
-    patient = patient.first()[0]
-    if not patient:
+    if not patient.first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    patient = patient.first()[0]
 
     patients_history = await db_session.execute(
         select(PatientsHistory).filter(PatientsHistory.patient_id == patient_id)
