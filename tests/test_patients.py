@@ -52,16 +52,10 @@ async def test_get_patient_by_id(ac: AsyncClient, get_json_data) -> None:
 @pytest.mark.asyncio
 async def test_file_upload(
         ac: AsyncClient,
-        tmp_path,
         get_json_data,
-        get_random_string,
+        get_random_file,
         s3_client
 ) -> None:
-    d = tmp_path / 'sub'
-    d.mkdir()
-    file = d / 'temp.txt'
-    file.write_text(get_random_string)
-
     # create a new patient
     response = await ac.post(
         '/patient/add',
@@ -72,7 +66,7 @@ async def test_file_upload(
     patient_id = response.json().get('id')
     assert patient_id
 
-    with open(file, 'rb') as f:
+    with open(get_random_file, 'rb') as f:
         # now upload file through API, to a newly created patient
         response = await ac.post(
             f'/patient/data/{patient_id}',

@@ -41,10 +41,19 @@ def get_json_data():
 
 
 @pytest.fixture
-def get_random_string(length: int = 300):
+def get_random_string(length: int = 1000):
     # random string for writing to a temp file
     random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=length))
     yield random_string
+
+
+@pytest.fixture()
+def get_random_file(get_random_string, tmp_path):
+    d = tmp_path / 'sub'
+    d.mkdir()
+    file = d / 'temp.txt'
+    file.write_text(get_random_string)
+    yield file
 
 
 @pytest.fixture
