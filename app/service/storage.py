@@ -4,6 +4,7 @@ from pathlib import Path
 from loguru import logger
 import aioboto3
 
+from service.parsers import parse_full_s3_path
 from config import config
 
 
@@ -47,6 +48,17 @@ class AioBoto3:
                 s3_path
             )
         return f"s3://{self.s3_bucket}/{s3_path}"
+
+    async def remove_object(
+            self,
+            full_s3_path: str
+    ):
+        bucket, s3_key = parse_full_s3_path(full_s3_path=full_s3_path)
+        async with self.session.client('s3', endpoint_url=self.endpoint_url) as s3_client:
+            await s3_client.delete_object(
+                Bucket=bucket,
+                Key=s3_key
+            )
 
     async def object_exists(
             self,

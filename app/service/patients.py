@@ -176,12 +176,16 @@ async def delete_patient_by_id_service(
     for item in patients_history:
         await db_session.delete(item)
 
+    s3_links_to_delete = []
     for file_record in patients_files:
+        s3_links_to_delete.append(file_record.data_url)
         await db_session.delete(file_record)
 
     await db_session.commit()
     await db_session.delete(patient)
     await db_session.commit()
+    for link in s3_links_to_delete:
+        await s3.remove_object(link)
     return
 
 
