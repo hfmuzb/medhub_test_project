@@ -3,7 +3,7 @@ from typing import Optional
 import aiofiles
 from fastapi import HTTPException, status, UploadFile
 from pydantic.types import UUID
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from schemas.patients import CreatePatient, GetPatientResponse, PatientCondition
@@ -138,6 +138,14 @@ async def add_item_to_patient_history_service(
     await db_session.commit()
     await db_session.refresh(new_item)
     return new_item
+
+
+async def delete_history_item_by_id_service(
+        item_id: UUID,
+        db_session: AsyncSession
+):
+    await db_session.execute(delete(PatientsHistory).filter(PatientsHistory.id == item_id))
+    await db_session.commit()
 
 
 async def delete_patient_by_id_service(

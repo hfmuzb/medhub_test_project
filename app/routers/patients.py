@@ -12,7 +12,8 @@ from dependencies.get_db import get_session
 
 from service.patients import (
     create_new_patient_service, get_patient_by_id_service, add_item_to_patient_history_service,
-    delete_patient_by_id_service, get_all_patients_service, upload_patient_data_service, filter_patients_service
+    delete_patient_by_id_service, get_all_patients_service, upload_patient_data_service, filter_patients_service,
+    delete_history_item_by_id_service
 )
 
 router = APIRouter()
@@ -101,6 +102,21 @@ async def add_item_to_patient_history(
         db_session=db_session
     )
     return item
+
+
+@router.delete("/patient-history")
+async def delete_history_item_by_id(
+        request: Request,
+        response: Response,
+        item_id: UUID,
+        doctor: str = Depends(basic_auth),
+        db_session: AsyncSession = Depends(get_session)
+):
+    await delete_history_item_by_id_service(
+        item_id=item_id,
+        db_session=db_session
+    )
+    return
 
 
 @router.delete("/patient/{patient_id}")
