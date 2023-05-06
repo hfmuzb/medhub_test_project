@@ -34,10 +34,11 @@ async def get_all_patients_service(
         limit,
         db_session: AsyncSession
 ):
-    patients = await db_session.execute(
-        select(Patient).limit(limit)
-    )
-    patients = patients.scalars().all()
+    patients = (
+        await db_session.execute(
+            select(Patient).limit(limit)
+        )
+    ).scalars().all()
     if not patients:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return [patient for patient in patients]
@@ -53,12 +54,13 @@ async def filter_patients_service(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Please provide either name or condition title")
     patients_ids = []
-    patients = await db_session.execute(
-        select(Patient).filter(
-            Patient.first_name.like(name) | Patient.last_name.like(name)
+    patients = (
+        await db_session.execute(
+            select(Patient).filter(
+                Patient.first_name.like(name) | Patient.last_name.like(name)
+            )
         )
-    )
-    patients = patients.scalars()
+    ).scalars()
     if not patients:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -72,19 +74,20 @@ async def get_patient_by_id_service(
         patient_id: UUID,
         db_session: AsyncSession
 ):
-    patient = await db_session.execute(
-        select(Patient).filter(Patient.id == patient_id)
-    )
-    patient = patient.first()
+    patient = (
+        await db_session.execute(
+            select(Patient).filter(Patient.id == patient_id)
+        )
+    ).first()
     if not patient:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     patient = patient[0]
 
-    patients_history = await db_session.execute(
-        select(PatientsHistory).filter(PatientsHistory.patient_id == patient_id)
-    )
-
-    patients_history = patients_history.scalars().all()
+    patients_history = (
+        await db_session.execute(
+            select(PatientsHistory).filter(PatientsHistory.patient_id == patient_id)
+        )
+    ).scalars().all()
 
     patient_conditions = [PatientsHistory(id=record.id,
                                           patient_id=record.patient_id,
@@ -93,11 +96,11 @@ async def get_patient_by_id_service(
                                           created_at=record.created_at)
                           for record in patients_history
                           ]
-    patient_files = await db_session.execute(
-        select(PatientsData).filter(PatientsData.patient_id == patient_id)
-    )
-
-    patient_files = patient_files.scalars().all()
+    patient_files = (
+        await db_session.execute(
+            select(PatientsData).filter(PatientsData.patient_id == patient_id)
+        )
+    ).scalars().all()
 
     patient_files = [
         PatientsData(
@@ -152,27 +155,29 @@ async def delete_patient_by_id_service(
         patient_id: UUID,
         db_session: AsyncSession
 ):
-    patient = await db_session.execute(select(Patient).filter(Patient.id == patient_id))
-    patient = patient.scalar()
+    patient = (
+        await db_session.execute(select(Patient).filter(Patient.id == patient_id))
+    ).scalar()
     if not patient:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    patients_history = await db_session.execute(
-        select(PatientsHistory).filter(PatientsHistory.patient_id == patient_id)
-    )
-    patients_history = patients_history.all()
+    patients_history = (
+        await db_session.execute(
+            select(PatientsHistory).filter(PatientsHistory.patient_id == patient_id)
+        )
+    ).scalars().all()
 
-    patients_files = await db_session.execute(
-        select(PatientsData).filter(PatientsData.patient_id == patient_id)
-    )
-
-    patients_files = patients_files.all()
+    patients_files = (
+        await db_session.execute(
+            select(PatientsData).filter(PatientsData.patient_id == patient_id)
+        )
+    ).scalars().all()
 
     for item in patients_history:
-        await db_session.delete(item[0])
+        await db_session.delete(item)
 
     for file_record in patients_files:
-        await db_session.delete(file_record[0])
+        await db_session.delete(file_record)
 
     await db_session.commit()
     await db_session.delete(patient)
@@ -188,10 +193,11 @@ async def upload_patient_data_service(
         file: UploadFile,
         db_session: AsyncSession,
 ) -> str:
-    doctor = await db_session.execute(
-        select(Doctors).filter(Doctors.login == doctor)
-    )
-    doctor_id = doctor.first()[0].id
+    doctor_id = (
+        await db_session.execute(
+            select(Doctors).filter(Doctors.login == doctor)
+        )
+    ).first()[0].id
     file_bytes = await file.read()
     async with aiofiles.tempfile.NamedTemporaryFile('wb') as f:
         await f.write(file_bytes)
