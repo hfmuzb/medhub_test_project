@@ -20,6 +20,10 @@ class PatientCondition(BaseModel):
         orm_mode = True
 
 
+class PatientConditionResponse(PatientCondition):
+    id: Optional[UUID] = None
+
+
 class PatientFiles(BaseModel):
     id: Optional[UUID] = None
     uploaded_by_doctor: Optional[UUID] = None
@@ -36,7 +40,7 @@ class CreatePatient(BasePatient):
 class GetPatientResponse(BasePatient):
     id: UUID
     birthdate: date
-    patient_condition: List[PatientCondition]
+    patient_condition: List[PatientConditionResponse]
     patient_files: List[PatientFiles]
 
 

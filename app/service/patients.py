@@ -86,7 +86,8 @@ async def get_patient_by_id_service(
 
     patients_history = patients_history.scalars().all()
 
-    patient_conditions = [PatientsHistory(patient_id=record.patient_id,
+    patient_conditions = [PatientsHistory(id=record.id,
+                                          patient_id=record.patient_id,
                                           condition_title=record.condition_title,
                                           condition_details=record.condition_details,
                                           created_at=record.created_at)
@@ -152,8 +153,19 @@ async def delete_patient_by_id_service(
         select(PatientsHistory).filter(PatientsHistory.patient_id == patient_id)
     )
     patients_history = patients_history.all()
+
+    patients_files = await db_session.execute(
+        select(PatientsData).filter(PatientsData.patient_id == patient_id)
+    )
+
+    patients_files = patients_files.all()
+
     for item in patients_history:
         await db_session.delete(item[0])
+
+    for file_record in patients_files:
+        await db_session.delete(file_record[0])
+
     await db_session.commit()
     await db_session.delete(patient)
     await db_session.commit()
