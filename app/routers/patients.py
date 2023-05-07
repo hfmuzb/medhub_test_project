@@ -13,7 +13,7 @@ from dependencies.get_db import get_session
 from service.patients import (
     create_new_patient_service, get_patient_by_id_service, add_item_to_patient_history_service,
     delete_patient_by_id_service, get_all_patients_service, upload_patient_data_service, filter_patients_service,
-    delete_history_item_by_id_service
+    delete_history_item_by_id_service, delete_patient_file_service
 )
 
 router = APIRouter()
@@ -134,7 +134,7 @@ async def delete_patient_by_id(
     return
 
 
-@router.post("/patient/data/{patient_id}")
+@router.post("/patient/files/{patient_id}")
 async def upload_patient_data(
         request: Request,
         response: Response,
@@ -152,3 +152,18 @@ async def upload_patient_data(
         db_session=db_session
     )
     return res
+
+
+@router.delete("/patient/files/delete")
+async def delete_patient_file_by_id(
+        request: Request,
+        response: Response,
+        item_id: UUID,
+        doctor: str = Depends(basic_auth),
+        db_session: AsyncSession = Depends(get_session)
+):
+    await delete_patient_file_service(
+        item_id=item_id,
+        db_session=db_session
+    )
+    return

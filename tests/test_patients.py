@@ -69,7 +69,7 @@ async def test_file_upload(
     with open(get_random_file, 'rb') as f:
         # now upload file through API, to a newly created patient
         response = await ac.post(
-            f'/patient/data/{patient_id}',
+            f'/patient/files/{patient_id}',
             auth=(config.DOCTOR_LOGIN, config.DOCTOR_PASSWORD),
             files=[('file', f)]
         )

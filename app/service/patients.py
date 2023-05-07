@@ -220,3 +220,21 @@ async def upload_patient_data_service(
     db_session.add(patient_data_item)
     await db_session.commit()
     return s3_link
+
+
+async def delete_patient_file_service(
+        item_id: UUID,
+        db_session: AsyncSession
+) -> None:
+    # delete file record from db
+    file_record = (
+        await db_session.execute(select(PatientsData).filter(PatientsData.id == item_id))
+    ).scalar()
+    if not file_record:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    file_s3_link = file_record.data_url
+    await db_session.delete(file_record)
+    await db_session.commit()
+
+    # delete file from minio
+    await s3.remove_object(full_s3_path=file_s3_link)
