@@ -8,6 +8,7 @@ import random
 import string
 
 from main import app
+from config import config
 from service.storage import s3
 
 
@@ -56,6 +57,7 @@ def get_random_file(get_random_string, tmp_path):
     yield file
 
 
-@pytest.fixture
-def s3_client():
+@pytest_asyncio.fixture
+async def s3_client():
+    await s3.create_bucket(bucket=config.MINIO_BUCKET)
     yield s3
